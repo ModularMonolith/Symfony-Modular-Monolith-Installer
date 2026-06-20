@@ -1,0 +1,35 @@
+{
+    "name": "modular-monolith/installer",
+    "description": "Interactive installer for modular-monolith/symfony-application",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2",
+        "symfony/console": "^7.2|^8.0",
+        "symfony/filesystem": "^7.2|^8.0",
+        "symfony/process": "^7.2|^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ModularMonolith\\Installer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ModularMonolith\\Installer\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/modular-monolith"
+    ],
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "build-phar": "bash scripts/build-phar.sh",
+        "publish-release": "bash scripts/publish-release.sh"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

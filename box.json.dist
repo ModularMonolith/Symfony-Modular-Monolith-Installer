@@ -1,0 +1,23 @@
+{
+    "$schema": "https://box-project.github.io/box/schema.json",
+    "alias": "modular-monolith.phar",
+    "banner": false,
+    "base-path": ".",
+    "chmod": "0755",
+    "check-requirements": true,
+    "compression": "GZ",
+    "directories": [
+        "src",
+        "vendor"
+    ],
+    "dump-autoload": true,
+    "exclude-dev-files": true,
+    "files": [
+        "composer.json"
+    ],
+    "main": "bin/modular-monolith",
+    "output": "build/modular-monolith.phar",
+    "replacements": {
+        "git-version": "dev"
+    }
+}

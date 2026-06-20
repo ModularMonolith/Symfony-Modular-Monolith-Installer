@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use ModularMonolith\Installer\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$application = new Application();
+$application->run(new ArgvInput());
