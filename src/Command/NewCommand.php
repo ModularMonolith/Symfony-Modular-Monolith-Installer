@@ -89,6 +89,7 @@ class NewCommand extends Command
         }
 
         $this->installer->writeAppSecret(targetPath: $targetPath, appSecret: $appSecret);
+        $this->installer->writeComposeProjectName(targetPath: $targetPath, projectName: basename($directory));
 
         if ($removeExampleModule) {
             $this->installer->removeTodoListExample(targetPath: $targetPath);

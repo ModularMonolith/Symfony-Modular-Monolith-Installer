@@ -29,6 +29,19 @@ class ProjectInstaller
 
     public function writeAppSecret(string $targetPath, string $appSecret): void
     {
+        $this->writeEnvVar($targetPath, 'APP_SECRET', $appSecret);
+    }
+
+    public function writeComposeProjectName(string $targetPath, string $projectName): void
+    {
+        $sanitized = strtolower((string) preg_replace('/[^a-zA-Z0-9]+/', '-', $projectName));
+        $sanitized = trim($sanitized, '-');
+
+        $this->writeEnvVar($targetPath, 'COMPOSE_PROJECT_NAME', $sanitized);
+    }
+
+    private function writeEnvVar(string $targetPath, string $key, string $value): void
+    {
         $envPath = $targetPath . '/.env';
 
         if (!$this->filesystem->exists($envPath)) {
@@ -36,11 +49,16 @@ class ProjectInstaller
         }
 
         $contents = (string) file_get_contents($envPath);
-        $contents = (string) preg_replace(
-            pattern: '/^APP_SECRET=.*$/m',
-            replacement: 'APP_SECRET=' . $appSecret,
-            subject: $contents,
-        );
+
+        if (preg_match('/^' . preg_quote($key, '/') . '=/m', $contents)) {
+            $contents = (string) preg_replace(
+                pattern: '/^' . preg_quote($key, '/') . '=.*$/m',
+                replacement: $key . '=' . $value,
+                subject: $contents,
+            );
+        } else {
+            $contents .= PHP_EOL . $key . '=' . $value . PHP_EOL;
+        }
 
         $this->filesystem->dumpFile($envPath, $contents);
     }
