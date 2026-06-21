@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  deps:
+    name: Install deps (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Cache vendor
+        id: cache-vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-vendor.outputs.cache-hit != 'true'
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    needs: deps
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Restore vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
+  phpcs:
+    name: PHPCS
+    needs: deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Restore vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-8.4-${{ hashFiles('composer.lock') }}
+
+      - name: Run PHPCS
+        run: vendor/bin/phpcs
+
+  phpstan:
+    name: PHPStan
+    needs: deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Restore vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-8.4-${{ hashFiles('composer.lock') }}
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse
