@@ -78,8 +78,8 @@ fi
 
 TAG="installer-v${VERSION}"
 RELEASE_TITLE="Installer v${VERSION}"
-PHAR_PATH="${ROOT_DIR}/build/modular-monolith.phar"
-ASSET_NAME="modular-monolith.phar"
+PHAR_PATH="${ROOT_DIR}/build/modulith.phar"
+ASSET_NAME="modulith.phar"
 
 echo "Publishing ${RELEASE_TITLE} (tag: ${TAG})"
 
@@ -113,10 +113,10 @@ else
 
 Install:
 \`\`\`bash
-curl -fsSL -o modular-monolith.phar \\
+curl -fsSL -o modulith.phar \\
   https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ASSET_NAME}
-chmod +x modular-monolith.phar
-./modular-monolith.phar new my-project
+chmod +x modulith.phar
+./modulith.phar new my-project
 \`\`\`
 
 Or via Composer:

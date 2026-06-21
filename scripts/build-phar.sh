@@ -8,20 +8,6 @@ BOX_PHAR="${ROOT_DIR}/.tools/box.phar"
 BOX_VERSION="4.7.0"
 INSTALLER_VERSION="${INSTALLER_VERSION:-dev}"
 
-generate_box_config() {
-    php -r '
-        $configPath = "box.json.dist";
-        $outputPath = "box.json";
-        $version = getenv("INSTALLER_VERSION") ?: "dev";
-        $config = json_decode(file_get_contents($configPath), true, 512, JSON_THROW_ON_ERROR);
-        $config["replacements"]["git-version"] = $version;
-        file_put_contents(
-            $outputPath,
-            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-        );
-    '
-}
-
 run_box() {
     if command -v box >/dev/null 2>&1; then
         box "$@"
@@ -48,17 +34,23 @@ composer install \
 rm -rf build
 mkdir -p build
 
-generate_box_config
+TMP_BOX="$(mktemp)"
+php -r '
+    $config = json_decode(file_get_contents("box.json"), true, 512, JSON_THROW_ON_ERROR);
+    $config["replacements"]["git-version"] = getenv("INSTALLER_VERSION") ?: "dev";
+    file_put_contents($argv[1], json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+' "${TMP_BOX}"
 
-run_box compile --config=box.json
+run_box compile --config="${TMP_BOX}"
+rm -f "${TMP_BOX}"
 
-if [[ ! -f build/modular-monolith.phar ]]; then
-    echo "PHAR was not created at build/modular-monolith.phar" >&2
+if [[ ! -f build/modulith.phar ]]; then
+    echo "PHAR was not created at build/modulith.phar" >&2
     exit 1
 fi
 
-chmod +x build/modular-monolith.phar
+chmod +x build/modulith.phar
 
-php build/modular-monolith.phar list >/dev/null
+php build/modulith.phar list >/dev/null
 
-echo "Built ${ROOT_DIR}/build/modular-monolith.phar"
+echo "Built ${ROOT_DIR}/build/modulith.phar"

@@ -84,7 +84,7 @@ final class NewCommandTest extends TestCase
 
     private function buildCommandWithStub(\Closure $processFactory): NewCommand
     {
-        return new class($processFactory) extends NewCommand {
+        return new class ($processFactory) extends NewCommand {
             public function __construct(private readonly \Closure $processFactory)
             {
                 parent::__construct();

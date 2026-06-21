@@ -14,19 +14,19 @@ Ensure Composer's global `bin` directory is on your `PATH`.
 
 ## Install PHAR (no Composer)
 
-Download the PHAR from [GitHub Releases](https://github.com/ModularMonolith/Symfony-Application/releases) (assets named `modular-monolith.phar`):
+Download the PHAR from [GitHub Releases](https://github.com/ModularMonolith/Symfony-Application/releases) (assets named `modulith.phar`):
 
 ```bash
-curl -fsSL -o modular-monolith.phar \
-  https://github.com/ModularMonolith/Symfony-Application/releases/latest/download/modular-monolith.phar
-chmod +x modular-monolith.phar
-./modular-monolith.phar new my-project
+curl -fsSL -o modulith.phar \
+  https://github.com/ModularMonolith/Symfony-Application/releases/latest/download/modulith.phar
+chmod +x modulith.phar
+./modulith.phar new my-project
 ```
 
 ## Usage
 
 ```bash
-modular-monolith new my-project
+modulith new my-project
 ```
 
 Options:
@@ -47,7 +47,7 @@ Options:
 ```bash
 cd installer
 composer install
-./bin/modular-monolith new /tmp/my-test-project
+./bin/modulith new /tmp/my-test-project
 ```
 
 ## Build PHAR locally
@@ -58,7 +58,7 @@ Requires [Box](https://github.com/box-project/box):
 cd installer
 composer global require humbug/box   # once
 composer build-phar
-php build/modular-monolith.phar list
+php build/modulith.phar list
 ```
 
 ## Releasing
@@ -75,7 +75,7 @@ git push origin installer-v1.0.0
 The [Installer Release](../.github/workflows/installer-release.yml) workflow will:
 
 1. Install production dependencies
-2. Build `build/modular-monolith.phar` with [Box](https://github.com/box-project/box)
+2. Build `build/modulith.phar` with [Box](https://github.com/box-project/box)
 3. Create or update a GitHub release with the PHAR attached
 
 ### Manual release (maintainers)
@@ -94,7 +94,7 @@ bash scripts/publish-release.sh --from-tag installer-v1.0.0
 
 - Verifies the CLI boots
 - Builds the PHAR with Box
-- Runs `modular-monolith.phar list`
+- Runs `modulith.phar list`
 
 ## Publishing to Packagist
 

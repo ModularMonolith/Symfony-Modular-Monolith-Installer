@@ -1,6 +1,6 @@
 {
     "$schema": "https://box-project.github.io/box/schema.json",
-    "alias": "modular-monolith.phar",
+    "alias": "modulith.phar",
     "banner": false,
     "base-path": ".",
     "chmod": "0755",
@@ -15,8 +15,8 @@
     "files": [
         "composer.json"
     ],
-    "main": "bin/modular-monolith",
-    "output": "build/modular-monolith.phar",
+    "main": "bin/modulith",
+    "output": "build/modulith.phar",
     "replacements": {
         "git-version": "dev"
     }

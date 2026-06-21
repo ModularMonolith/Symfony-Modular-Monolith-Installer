@@ -10,8 +10,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
@@ -87,23 +85,8 @@ class NewCommand extends Command
         $appSecret = bin2hex(random_bytes(16));
 
         if (!$input->getOption('no-interaction')) {
-            $helper = $this->getHelper('question');
-            $removeExampleModule = (bool) $helper->ask(
-                input: $input,
-                output: $output,
-                question: new ConfirmationQuestion(
-                    question: 'Remove the TodoList example module? [y/N] ',
-                    default: false,
-                ),
-            );
-            $appSecretAnswer = $helper->ask(
-                input: $input,
-                output: $output,
-                question: new Question(
-                    question: 'APP_SECRET (leave empty for a generated value): ',
-                    default: '',
-                ),
-            );
+            $removeExampleModule = $io->confirm('Remove the TodoList example module?', false);
+            $appSecretAnswer = $io->ask('APP_SECRET (leave empty for a generated value)');
             if (is_string($appSecretAnswer) && $appSecretAnswer !== '') {
                 $appSecret = $appSecretAnswer;
             }
@@ -171,6 +154,9 @@ class NewCommand extends Command
             }
         }
 
-        $io->note('Removed TodoList example module from src/ and tests/. Review routes, fixtures, and migrations if needed.');
+        $io->note([
+            'Removed TodoList example module from src/ and tests/.',
+            'Review routes, fixtures, and migrations if needed.',
+        ]);
     }
 }
