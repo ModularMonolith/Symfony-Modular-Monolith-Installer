@@ -13,7 +13,7 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -23,7 +23,7 @@ jobs:
 
       - name: Cache vendor
         id: cache-vendor
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: vendor-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
@@ -40,7 +40,7 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -49,7 +49,7 @@ jobs:
           coverage: none
 
       - name: Restore vendor
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: vendor-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
@@ -62,7 +62,7 @@ jobs:
     needs: deps
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up PHP 8.4
         uses: shivammathur/setup-php@v2
@@ -71,7 +71,7 @@ jobs:
           coverage: none
 
       - name: Restore vendor
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: vendor-8.4-${{ hashFiles('composer.lock') }}
@@ -84,7 +84,7 @@ jobs:
     needs: deps
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up PHP 8.4
         uses: shivammathur/setup-php@v2
@@ -93,7 +93,7 @@ jobs:
           coverage: none
 
       - name: Restore vendor
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: vendor-8.4-${{ hashFiles('composer.lock') }}
