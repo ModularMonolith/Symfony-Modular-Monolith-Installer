@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace ModularMonolith\Installer\Tests\Command;
 
 use ModularMonolith\Installer\Command\NewCommand;
+use ModularMonolith\Installer\Installer\ProjectInstaller;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Process\Process;
 
 final class NewCommandTest extends TestCase
 {
@@ -33,7 +33,7 @@ final class NewCommandTest extends TestCase
     {
         mkdir($this->tempDir . '/already-exists');
 
-        $tester = new CommandTester($this->buildCommandWithStub(fn () => $this->buildSuccessProcess()));
+        $tester = new CommandTester(new NewCommand($this->stubInstaller(fn () => true)));
         $tester->execute(['directory' => 'already-exists']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -42,13 +42,14 @@ final class NewCommandTest extends TestCase
 
     public function testSucceedsInNoInteractionModeWhenProcessSucceeds(): void
     {
-        $tester = new CommandTester($this->buildCommandWithStub(function (): Process {
+        $installer = $this->stubInstaller(function (): bool {
             mkdir($this->tempDir . '/new-project', 0777, true);
             file_put_contents($this->tempDir . '/new-project/.env', "APP_ENV=dev\nAPP_SECRET=changeme\n");
 
-            return $this->buildSuccessProcess();
-        }));
+            return true;
+        });
 
+        $tester = new CommandTester(new NewCommand($installer));
         $tester->execute(['directory' => 'new-project', '--no-interaction' => true]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
@@ -59,13 +60,14 @@ final class NewCommandTest extends TestCase
     {
         $envFile = $this->tempDir . '/secret-project/.env';
 
-        $tester = new CommandTester($this->buildCommandWithStub(function () use ($envFile): Process {
+        $installer = $this->stubInstaller(function () use ($envFile): bool {
             mkdir(dirname($envFile), 0777, true);
             file_put_contents($envFile, "APP_ENV=dev\nAPP_SECRET=changeme\n");
 
-            return $this->buildSuccessProcess();
-        }));
+            return true;
+        });
 
+        $tester = new CommandTester(new NewCommand($installer));
         $tester->execute(['directory' => 'secret-project', '--no-interaction' => true]);
 
         $envContents = (string) file_get_contents($envFile);
@@ -75,46 +77,26 @@ final class NewCommandTest extends TestCase
 
     public function testFailsWhenProcessFails(): void
     {
-        $tester = new CommandTester($this->buildCommandWithStub(fn () => $this->buildFailProcess()));
+        $tester = new CommandTester(new NewCommand($this->stubInstaller(fn () => false)));
         $tester->execute(['directory' => 'failed-project', '--no-interaction' => true]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('composer create-project failed', $tester->getDisplay());
     }
 
-    private function buildCommandWithStub(\Closure $processFactory): NewCommand
+    private function stubInstaller(\Closure $createProject): ProjectInstaller
     {
-        return new class ($processFactory) extends NewCommand {
-            public function __construct(private readonly \Closure $processFactory)
+        return new class ($createProject) extends ProjectInstaller {
+            public function __construct(private readonly \Closure $createProject)
             {
                 parent::__construct();
             }
 
-            protected function buildCreateProjectProcess(string $directory, string $repository): Process
+            public function createProject(string $directory, string $repository, callable $onOutput): bool
             {
-                return ($this->processFactory)();
+                return ($this->createProject)();
             }
         };
-    }
-
-    private function buildSuccessProcess(): Process
-    {
-        $process = $this->createMock(Process::class);
-        $process->method('setTimeout')->willReturnSelf();
-        $process->method('run')->willReturn(0);
-        $process->method('isSuccessful')->willReturn(true);
-
-        return $process;
-    }
-
-    private function buildFailProcess(): Process
-    {
-        $process = $this->createMock(Process::class);
-        $process->method('setTimeout')->willReturnSelf();
-        $process->method('run')->willReturn(1);
-        $process->method('isSuccessful')->willReturn(false);
-
-        return $process;
     }
 
     private function removeDir(string $path): void

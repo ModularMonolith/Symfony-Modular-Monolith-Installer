@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ModularMonolith\Installer\Command;
 
+use ModularMonolith\Installer\Installer\ProjectInstaller;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -11,8 +12,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Process;
 
 #[AsCommand(
     name: 'new',
@@ -20,9 +19,13 @@ use Symfony\Component\Process\Process;
 )]
 class NewCommand extends Command
 {
-    private const string DEFAULT_TEMPLATE = 'modular-monolith/symfony-application';
+    private ProjectInstaller $installer;
 
-    private const string DEFAULT_REPOSITORY = 'https://github.com/ModularMonolith/Symfony-Application';
+    public function __construct(?ProjectInstaller $installer = null)
+    {
+        parent::__construct();
+        $this->installer = $installer ?? new ProjectInstaller();
+    }
 
     protected function configure(): void
     {
@@ -36,7 +39,7 @@ class NewCommand extends Command
                 name: 'repository',
                 mode: InputOption::VALUE_REQUIRED,
                 description: 'VCS URL when the template is not on Packagist',
-                default: self::DEFAULT_REPOSITORY,
+                default: ProjectInstaller::DEFAULT_REPOSITORY,
             )
             ->addOption(
                 name: 'no-interaction',
@@ -48,15 +51,11 @@ class NewCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle(
-            input: $input,
-            output: $output,
-        );
-        $filesystem = new Filesystem();
+        $io = new SymfonyStyle(input: $input, output: $output);
         $directory = (string) $input->getArgument('directory');
         $targetPath = realpath('.') . '/' . $directory;
 
-        if ($filesystem->exists($targetPath)) {
+        if (is_dir($targetPath)) {
             $io->error(sprintf('Directory "%s" already exists.', $targetPath));
 
             return Command::FAILURE;
@@ -66,23 +65,20 @@ class NewCommand extends Command
         $io->title('Creating modular monolith application');
         $io->text(sprintf('Directory: %s', $targetPath));
 
-        $createProject = $this->buildCreateProjectProcess(
+        $success = $this->installer->createProject(
             directory: $directory,
             repository: $repository,
+            onOutput: fn (string $type, string $buffer) => $output->write($buffer),
         );
-        $createProject->setTimeout(null);
-        $createProject->run(function (string $type, string $buffer) use ($output): void {
-            $output->write($buffer);
-        });
 
-        if (!$createProject->isSuccessful()) {
+        if (!$success) {
             $io->error('composer create-project failed.');
 
             return Command::FAILURE;
         }
 
-        $removeExampleModule = false;
         $appSecret = bin2hex(random_bytes(16));
+        $removeExampleModule = false;
 
         if (!$input->getOption('no-interaction')) {
             $removeExampleModule = $io->confirm('Remove the TodoList example module?', false);
@@ -92,23 +88,14 @@ class NewCommand extends Command
             }
         }
 
-        $envPath = $targetPath . '/.env';
-        if ($filesystem->exists($envPath)) {
-            $envContents = (string) file_get_contents($envPath);
-            $envContents = (string) preg_replace(
-                pattern: '/^APP_SECRET=.*$/m',
-                replacement: 'APP_SECRET=' . $appSecret,
-                subject: $envContents,
-            );
-            $filesystem->dumpFile($envPath, $envContents);
-        }
+        $this->installer->writeAppSecret(targetPath: $targetPath, appSecret: $appSecret);
 
         if ($removeExampleModule) {
-            $this->removeTodoListExample(
-                filesystem: $filesystem,
-                targetPath: $targetPath,
-                io: $io,
-            );
+            $this->installer->removeTodoListExample(targetPath: $targetPath);
+            $io->note([
+                'Removed TodoList example module from src/ and tests/.',
+                'Review routes, fixtures, and migrations if needed.',
+            ]);
         }
 
         $io->success([
@@ -117,46 +104,5 @@ class NewCommand extends Command
         ]);
 
         return Command::SUCCESS;
-    }
-
-    protected function buildCreateProjectProcess(string $directory, string $repository): Process
-    {
-        $command = [
-            'composer',
-            'create-project',
-            self::DEFAULT_TEMPLATE,
-            $directory,
-            '--repository=' . json_encode(
-                value: [
-                    'type' => 'vcs',
-                    'url' => $repository,
-                ],
-                flags: JSON_THROW_ON_ERROR,
-            ),
-        ];
-
-        return new Process(command: $command);
-    }
-
-    private function removeTodoListExample(
-        Filesystem $filesystem,
-        string $targetPath,
-        SymfonyStyle $io,
-    ): void {
-        $paths = [
-            $targetPath . '/src/Capability/TodoList',
-            $targetPath . '/tests/Capability/TodoList',
-        ];
-
-        foreach ($paths as $path) {
-            if ($filesystem->exists($path)) {
-                $filesystem->remove($path);
-            }
-        }
-
-        $io->note([
-            'Removed TodoList example module from src/ and tests/.',
-            'Review routes, fixtures, and migrations if needed.',
-        ]);
     }
 }
