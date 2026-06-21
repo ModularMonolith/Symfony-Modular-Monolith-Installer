@@ -88,6 +88,7 @@ class ProjectInstaller implements ProjectInstallerInterface
             'create-project',
             self::DEFAULT_TEMPLATE,
             $directory,
+            '--stability=dev',
             '--repository=' . json_encode(
                 value: ['type' => 'vcs', 'url' => $repository],
                 flags: JSON_THROW_ON_ERROR,
