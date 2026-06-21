@@ -6,7 +6,22 @@ declare(strict_types=1);
 use ModularMonolith\Installer\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 
-require __DIR__ . '/../vendor/autoload.php';
+$autoloadCandidates = [
+    __DIR__ . '/../vendor/autoload.php',      // dev / cloned repo
+    __DIR__ . '/../../../autoload.php',        // composer require / composer global require
+];
+
+foreach ($autoloadCandidates as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+
+if (!class_exists(Application::class)) {
+    fwrite(STDERR, "Autoloader not found. Run `composer install`.\n");
+    exit(1);
+}
 
 $application = new Application();
 $application->run(new ArgvInput());
