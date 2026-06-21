@@ -32,13 +32,22 @@ Options:
 | Option | Description |
 |--------|-------------|
 | `--repository=URL` | VCS URL when the template is not on Packagist (default: GitHub template repo) |
-| `-n, --no-interaction` | Skip prompts; keep TodoList example and auto-generate `APP_SECRET` |
+| `-n, --no-interaction` | Skip prompts; keep TodoList example, auto-generate `APP_SECRET`, use computed container prefix |
+
+## Interactive prompts
+
+The installer asks:
+
+1. **Remove the TodoList example module?** — strips `src/Capability/TodoList` and `tests/Capability/TodoList`
+2. **APP_SECRET** — leave empty to auto-generate a random value
+3. **Docker container name prefix** — used as `COMPOSE_PROJECT_NAME` in `.env`; defaults to the directory name sanitized to lowercase alphanumeric-and-hyphens (e.g. `my-project` → `my-project`)
 
 ## What it does
 
 1. Runs `composer create-project modular-monolith/symfony-application <directory>`
-2. Optionally sets `APP_SECRET` in `.env`
-3. Optionally removes the TodoList example module from `src/` and `tests/`
+2. Sets `APP_SECRET` in `.env`
+3. Sets `COMPOSE_PROJECT_NAME` in `.env` (controls Docker container name prefix)
+4. Optionally removes the TodoList example module from `src/` and `tests/`
 
 ## Local development
 

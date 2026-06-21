@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ModularMonolith\Installer\Command;
 
 use ModularMonolith\Installer\Installer\ProjectInstaller;
+use ModularMonolith\Installer\Installer\ProjectInstallerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,9 +20,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class NewCommand extends Command
 {
-    private ProjectInstaller $installer;
+    private ProjectInstallerInterface $installer;
 
-    public function __construct(?ProjectInstaller $installer = null)
+    public function __construct(?ProjectInstallerInterface $installer = null)
     {
         parent::__construct();
         $this->installer = $installer ?? new ProjectInstaller();
@@ -79,6 +80,7 @@ class NewCommand extends Command
 
         $appSecret = bin2hex(random_bytes(16));
         $removeExampleModule = false;
+        $containerPrefix = ProjectInstaller::computeContainerPrefix(basename($directory));
 
         if (!$input->getOption('no-interaction')) {
             $removeExampleModule = $io->confirm('Remove the TodoList example module?', false);
@@ -86,10 +88,16 @@ class NewCommand extends Command
             if (is_string($appSecretAnswer) && $appSecretAnswer !== '') {
                 $appSecret = $appSecretAnswer;
             }
+            $prefixAnswer = $io->ask(
+                sprintf('Docker container name prefix (leave empty to use "%s")', $containerPrefix),
+            );
+            if (is_string($prefixAnswer) && $prefixAnswer !== '') {
+                $containerPrefix = $prefixAnswer;
+            }
         }
 
         $this->installer->writeAppSecret(targetPath: $targetPath, appSecret: $appSecret);
-        $this->installer->writeComposeProjectName(targetPath: $targetPath, projectName: basename($directory));
+        $this->installer->writeComposeProjectName(targetPath: $targetPath, prefix: $containerPrefix);
 
         if ($removeExampleModule) {
             $this->installer->removeTodoListExample(targetPath: $targetPath);

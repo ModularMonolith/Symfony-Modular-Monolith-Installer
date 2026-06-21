@@ -7,7 +7,7 @@ namespace ModularMonolith\Installer\Installer;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
-class ProjectInstaller
+class ProjectInstaller implements ProjectInstallerInterface
 {
     public const string DEFAULT_TEMPLATE = 'modular-monolith/symfony-application';
 
@@ -32,12 +32,16 @@ class ProjectInstaller
         $this->writeEnvVar($targetPath, 'APP_SECRET', $appSecret);
     }
 
-    public function writeComposeProjectName(string $targetPath, string $projectName): void
+    public static function computeContainerPrefix(string $name): string
     {
-        $sanitized = strtolower((string) preg_replace('/[^a-zA-Z0-9]+/', '-', $projectName));
-        $sanitized = trim($sanitized, '-');
+        $sanitized = strtolower((string) preg_replace('/[^a-zA-Z0-9]+/', '-', $name));
 
-        $this->writeEnvVar($targetPath, 'COMPOSE_PROJECT_NAME', $sanitized);
+        return trim($sanitized, '-');
+    }
+
+    public function writeComposeProjectName(string $targetPath, string $prefix): void
+    {
+        $this->writeEnvVar($targetPath, 'COMPOSE_PROJECT_NAME', self::computeContainerPrefix($prefix));
     }
 
     private function writeEnvVar(string $targetPath, string $key, string $value): void
@@ -77,7 +81,7 @@ class ProjectInstaller
         }
     }
 
-    protected function buildProcess(string $directory, string $repository): Process
+    private function buildProcess(string $directory, string $repository): Process
     {
         return new Process(command: [
             'composer',
